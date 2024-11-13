@@ -22,6 +22,7 @@ export default function Home() {
   const [forceChartDataArray, setForceChartDataArray] = useState<any[]>([])
   const [positionOfThePunchChartDataArray, setPositionOfThePunchChartDataArray] = useState<any[]>([])
   const [lifeCycle, setLifeCycle] = useState<number>(0)
+  const [WSError, setWSError] = useState<boolean>(false);
   let socketData: any = null
 
   const parseMessageToJson = (message: string): Record<string, any> => {
@@ -50,7 +51,13 @@ export default function Home() {
       ws.send(api_key);
     };
 
+    ws.onerror = (event) => {
+      console.log("Error connecting to WebSocket:", event);
+      setWSError(true);
+    };
+
     ws.onmessage = (event) => {
+      setWSError(false);
       try {
         const data: Record<string, any> = JSON.parse(event.data);
         const timestamp = new Date().toLocaleString("en-GB", { timeZone: "Asia/Bangkok" });
@@ -116,31 +123,36 @@ export default function Home() {
       ws.close();
     };
   }, []);
-
-
-
   return (
     <div className="flex-1 overflow-auto relative z-10">
       <Header title="ORIOTE" />
       <main className=" max-w-7xl mx-auto py-6 px-4 lg:px-8">
-        <motion.div
-          className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1 }}
-        >
-          <StatCard name="Machine ID" icon={MonitorCog} value={"M001EF"} color="#F59E0B" />
-          <StatCard name="Machine Cycle" icon={Recycle} value={lifeCycle} color="#6366F1" />
-        </motion.div>
+        {WSError ?
+          <div className="p-4 rounded-md bg-slate-700 text-red-500">
+            <h1>Error connecting. Please try again.</h1>
+          </div>
+          :
+          <>
+            <motion.div
+              className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1 }}
+            >
+              <StatCard name="Machine ID" icon={MonitorCog} value={"M001EF"} color="#F59E0B" />
+              <StatCard name="Machine Cycle" icon={Recycle} value={lifeCycle} color="#6366F1" />
+            </motion.div>
 
-        {/* Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <EnergyConsumption chartData={energyConsumptionDataArray} />
-          <VoltageUsageChart chartData={voltageUsageChartDataArray} />
-          <PressureChart chartData={pressureChartDataArray} />
-          <ForceChart chartData={forceChartDataArray} />
-          <PositionPunchChart chartData={positionOfThePunchChartDataArray} />
-        </div>
+            {/* Charts */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <EnergyConsumption chartData={energyConsumptionDataArray} />
+              <VoltageUsageChart chartData={voltageUsageChartDataArray} />
+              <PressureChart chartData={pressureChartDataArray} />
+              <ForceChart chartData={forceChartDataArray} />
+              <PositionPunchChart chartData={positionOfThePunchChartDataArray} />
+            </div>
+          </>
+        }
       </main>
     </div>
   );

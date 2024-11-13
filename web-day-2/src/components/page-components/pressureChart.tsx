@@ -36,12 +36,6 @@ function PressureChart({ chartData }: Props) {
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis
                             dataKey="time"
-                            label={{
-                                value: 'Time',
-                                offset: -5,
-                                fill: '#E5E7EB',
-                                
-                            }}
                         />
                         <YAxis
                             label={{
