@@ -1,0 +1,45 @@
+version: "3"
+
+services:
+  mongodb:
+    image: mongo
+    container_name: mongodb_container
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: rootuser
+      MONGO_INITDB_ROOT_PASSWORD: rootpass
+     
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongodb_data_container:/data/db
+    
+  mosquitto:
+    image: eclipse-mosquitto
+    hostname: mosquitto
+    container_name: mosquitto
+    restart: unless-stopped
+    ports:
+      - "1883:1883"  # MQTT port
+      - "8080:8080"  # WebSocket port (if required)
+    volumes:
+      - ./mosquitto:/etc/mosquitto  # Mount the custom config directory
+      - ./mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf  # Mount your custom configuration file
+      - ./mosquitto/data:/var/lib/mosquitto  # Persist data (optional)
+      - ./mosquitto/pwfile:/mosquitto/passwd_file  # Mount password file
+    
+  api:
+    build: ./api  # Path to your Express app directory
+    working_dir: /usr/src/app
+    container_name: api
+    ports:
+      - "3000:3000"  # Expose Express app on port 3000
+    volumes:
+      - ./api:/usr/src/app  # Mount your Express app directory
+    environment:
+      - NODE_ENV=development
+    depends_on:
+      - mongodb  # Ensure MongoDB starts before the Express app
+    command: npm run dev
+volumes:
+  mongodb_data_container:
+  mosquitto:  
