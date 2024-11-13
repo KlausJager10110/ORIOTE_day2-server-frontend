@@ -40,8 +40,8 @@ mongoose.connect(process.env.MONGO_URL)
     .then(() => console.log(`Connected to MongoDB Successfully at ${process.env.MONGO_URL}`))
     .catch(err => console.error('MongoDB connection error:', err));
 
-// const MQTT_SERVER = "172.18.0.3"; // docker 
-const MQTT_SERVER = "127.0.0.1";
+const MQTT_SERVER = "172.18.0.3"; // docker 
+// const MQTT_SERVER = "127.0.0.1";
 const MQTT_PORT = "1883";
 const MQTT_USER = "tesa";
 const MQTT_PASSWORD = "oriote";
@@ -170,7 +170,7 @@ ws.on('message', async function message(data) {
         const newPunchMachineData = new punchMachineData(formattedData);
 
         // Save the new data to the database
-        // const savedData = await newPunchMachineData.save();
+        const savedData = await newPunchMachineData.save();
 
         // console.log('Saved data to database:');
     } catch (error) {

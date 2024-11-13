@@ -3,7 +3,7 @@ version: "3"
 services:
   mongodb:
     image: mongo
-    container_name: mongodb_container
+    container_name: mongodb_container1
     environment:
       MONGO_INITDB_ROOT_USERNAME: rootuser
       MONGO_INITDB_ROOT_PASSWORD: rootpass
@@ -16,7 +16,7 @@ services:
   mosquitto:
     image: eclipse-mosquitto
     hostname: mosquitto
-    container_name: mosquitto
+    container_name: mosquitto1
     restart: unless-stopped
     ports:
       - "1883:1883"  # MQTT port
@@ -30,7 +30,7 @@ services:
   api:
     build: ./api  # Path to your Express app directory
     working_dir: /usr/src/app
-    container_name: api
+    container_name: api1
     ports:
       - "3000:3000"  # Expose Express app on port 3000
     volumes:
