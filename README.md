@@ -2,8 +2,7 @@
 ## Team: ORIOTE from KMITL
 
 
-front end: {
-  cd web-day-2
-  npm i
-  npm run dev
-}
+front end:
+  - cd web-day-2
+  - npm i
+  - npm run dev
