@@ -8,11 +8,11 @@ type Props = {
 };
 function ForceChart({ chartData }: Props) {
     return (
-        <motion.div
+        <div
             className="bg-gray-800 bg-opacity-50 backdrop-blur-md shadow-lg rounded-xl p-6 border border-gray-700"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
+        // initial={{ opacity: 0, y: 20 }}
+        // animate={{ opacity: 1, y: 0 }}
+        // transition={{ delay: 0.3 }}
         >
             <h2 className="text-lg font-extrabold mb-4 text-gray-100">Force</h2>
             <div className="h-80">
@@ -38,13 +38,19 @@ function ForceChart({ chartData }: Props) {
                                 fill: '#E5E7EB',
                             }}
                         />
-                        <Tooltip />
+                        <Tooltip
+                            contentStyle={{
+                                backgroundColor: "rgba(31, 41, 55, 0.8)",
+                                borderColor: "#4B5563",
+                            }}
+                            itemStyle={{ color: "#E5E7EB" }}
+                        />
                         <Legend />
                         <Line type="monotone" dataKey="force" stroke="#82ca9d" strokeDasharray="3 4 5 2" />
                     </LineChart>
                 </ResponsiveContainer>
             </div>
-        </motion.div>
+        </div>
     )
 }
 

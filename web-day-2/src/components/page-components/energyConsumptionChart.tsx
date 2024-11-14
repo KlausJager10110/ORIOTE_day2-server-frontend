@@ -36,11 +36,11 @@ const CustomTooltip = ({ active, payload, label }: { active?: boolean, payload?:
 
 const EnergyConsumption = ({ chartData }: Props) => {
     return (
-        <motion.div
+        <div
             className="bg-gray-800 bg-opacity-50 backdrop-blur-md shadow-lg rounded-xl p-6 border border-gray-700"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
+            // initial={{ opacity: 0, y: 20 }}
+            // animate={{ opacity: 1, y: 0 }}
+            // transition={{ delay: 0.3 }}
         >
             <h2 className="text-lg font-extrabold mb-4 text-gray-100">Energy Consumption</h2>
             <div className="h-80">
@@ -85,7 +85,7 @@ const EnergyConsumption = ({ chartData }: Props) => {
                     </ComposedChart>
                 </ResponsiveContainer>
             </div>
-        </motion.div>
+        </div>
     );
 };
 

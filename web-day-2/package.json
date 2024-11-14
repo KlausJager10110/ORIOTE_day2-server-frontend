@@ -9,6 +9,13 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@devexpress/dx-react-chart": "^4.0.9",
+    "@devexpress/dx-react-chart-material-ui": "^4.0.9",
+    "@emotion/react": "^11.13.3",
+    "@emotion/styled": "^11.13.0",
+    "@mui/material": "^6.1.7",
+    "@mui/x-charts": "^7.22.2",
+    "@mui/x-data-grid": "^7.22.2",
     "axios": "^1.7.7",
     "framer-motion": "^11.11.13",
     "lucide-react": "^0.456.0",

@@ -15,11 +15,11 @@ const COLORS = ["#6366F1", "#8B5CF6", "#EC4899", "#10B981", "#F59E0B"];
 
 function VoltageUsageChart({ chartData }: Props) {
   return (
-    <motion.div
+    <div
       className='bg-gray-800 bg-opacity-50 backdrop-blur-md shadow-lg rounded-xl p-6 border border-gray-700'
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.2 }}
+      // initial={{ opacity: 0, y: 20 }}
+      // animate={{ opacity: 1, y: 0 }}
+      // transition={{ delay: 0.2 }}
     >
       <h2 className='text-lg font-extrabold mb-4 text-gray-100'>Voltage Usage</h2>
 
@@ -72,8 +72,8 @@ function VoltageUsageChart({ chartData }: Props) {
               name="L1 Ground"
               stroke={COLORS[1]}
               strokeWidth={3}
-              dot={{ fill: COLORS[1], strokeWidth: 2, r: 6 }}
-              activeDot={{ r: 8, strokeWidth: 2 }}
+              dot={false}
+              activeDot={{ r: 4, strokeWidth: 2 }}
             />
             <Line
               type='monotone'
@@ -81,8 +81,8 @@ function VoltageUsageChart({ chartData }: Props) {
               name="L2 Ground"
               stroke={COLORS[2]}
               strokeWidth={3}
-              dot={{ fill: COLORS[2], strokeWidth: 2, r: 6 }}
-              activeDot={{ r: 8, strokeWidth: 2 }}
+              dot={false}
+              activeDot={{ r: 4, strokeWidth: 2 }}
             />
             <Line
               type='monotone'
@@ -90,13 +90,13 @@ function VoltageUsageChart({ chartData }: Props) {
               name="L3 Ground"
               stroke={COLORS[3]}
               strokeWidth={3}
-              dot={{ fill: COLORS[3], strokeWidth: 2, r: 6 }}
-              activeDot={{ r: 8, strokeWidth: 2 }}
+              dot={false}
+              activeDot={{ r: 4, strokeWidth: 2 }}
             />
           </LineChart>
         </ResponsiveContainer>
       </div>
-    </motion.div>
+    </div>
   )
 }
 

@@ -1,34 +1,33 @@
 'use client'
 
-import Image from "next/image";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import StatCard from "@/components/common/statCard";
-import { MonitorCog, Recycle } from "lucide-react";
+import { MonitorCog, Pause, Play, Recycle } from "lucide-react";
 import Header from "@/components/common/header";
 import EnergyConsumption from "@/components/page-components/energyConsumptionChart";
-import { useEffect, useState } from "react";
 import VoltageUsageChart from "@/components/page-components/voltageUsageChart";
 import ForceChart from "@/components/page-components/forceChart";
 import PositionPunchChart from "@/components/page-components/positionPunchChart";
 import PressureChart from "@/components/page-components/pressureChart";
-
+import OverAllChart from "@/components/page-components/overAllChart";
 
 export default function Home() {
   const delay = 0;
-  const api_key = "1990947672a3dab4da6d5f3e5f15b1ef";
   const [energyConsumptionDataArray, setEnergyConsumptionDataArray] = useState<any[]>([]);
   const [voltageUsageChartDataArray, setVoltageUsageChartDataArray] = useState<any[]>([]);
   const [pressureChartDataArray, setPressureChartDataArray] = useState<any[]>([]);
-  const [forceChartDataArray, setForceChartDataArray] = useState<any[]>([])
-  const [positionOfThePunchChartDataArray, setPositionOfThePunchChartDataArray] = useState<any[]>([])
-  const [lifeCycle, setLifeCycle] = useState<number>(0)
-  const [WSError, setWSError] = useState<boolean>(false);
-  let socketData: any = null
+  const [forceChartDataArray, setForceChartDataArray] = useState<any[]>([]);
+  const [positionOfThePunchChartDataArray, setPositionOfThePunchChartDataArray] = useState<any[]>([]);
+  const [overAllDataArray, setOverAllDataArray] = useState<any[]>([]);
+  const [lifeCycle, setLifeCycle] = useState<number>(0);
+  const [allState, setAllState] = useState(true);
+  const [socketData, setSocketData] = useState<any>(null);
+  let timeInterval = 0.2;
 
   const parseMessageToJson = (message: string): Record<string, any> => {
     const result: Record<string, any> = {};
     const parts = message.split("&");
-
     parts.forEach(part => {
       const [topic, keyValue] = part.split("=");
       if (topic && keyValue) {
@@ -41,93 +40,128 @@ export default function Home() {
         }
       }
     });
-
     return result;
   };
 
   useEffect(() => {
-    const ws = new WebSocket("ws://technest.ddns.net:8001/ws");
-    ws.onopen = (event) => {
-      ws.send(api_key);
-    };
+    // Initialize WebSocket only if allState is true
+    let ws: WebSocket | null = null;
 
-    ws.onerror = (event) => {
-      console.log("Error connecting to WebSocket:", event);
-      setWSError(true);
-    };
+    if (allState) {
+      ws = new WebSocket("ws://technest.ddns.net:8001/ws");
+      const api_key = "f1b17e2b414bc422a4b8e78ad6fb65bc";
 
-    ws.onmessage = (event) => {
-      setWSError(false);
-      try {
-        const data: Record<string, any> = JSON.parse(event.data);
-        const timestamp = new Date().toLocaleString("en-GB", { timeZone: "Asia/Bangkok" });
-        data['time'] = timestamp;
-        setLifeCycle(data['Cycle Count'])
-        socketData = data;
-      } catch {
-        const data = parseMessageToJson(event.data);
-        const timestamp = new Date().toLocaleString("en-GB", { timeZone: "Asia/Bangkok" });
-        data['time'] = timestamp;
-        setLifeCycle(data['Cycle Count'])
-        socketData = data;
-      }
-    };
+      ws.onopen = () => {
+        ws?.send(api_key);
+        console.log("WebSocket Connected");
+      };
 
-    setInterval(() => {
-      if (socketData === null) {
-        return;
-      }
+      ws.onerror = (event) => {
+        console.log("Error connecting to WebSocket:", event);
+      };
 
-      let data = socketData;
-
-      setEnergyConsumptionDataArray((prevData) => {
-        const updatedData = [...prevData, { time: data['time'], power: data['Energy Consumption']?.['Power'], cycle: data['Cycle Count'] }];
-        if (updatedData.length > 20) {
-          updatedData.shift();
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          const timestamp = new Date().toLocaleString("en-GB", { timeZone: "Asia/Bangkok" });
+          if (data["Cycle Count"] === 0) {
+            timeInterval = 0.2;
+          }
+          timeInterval += 0.2;
+          data["time"] = timestamp;
+          data["_energyConsumption"] = data["Energy Consumption"]?.Power * timeInterval;
+          setLifeCycle(data["Cycle Count"]);
+          setSocketData(data);
+        } catch {
+          const data = parseMessageToJson(event.data);
+          const timestamp = new Date().toLocaleString("en-GB", { timeZone: "Asia/Bangkok" });
+          if (data["Cycle Count"] === 0) {
+            timeInterval = 0.2;
+          }
+          timeInterval += 0.2;
+          data["time"] = timestamp;
+          data["_energyConsumption"] = data["Energy Consumption"]?.Power * timeInterval;
+          setLifeCycle(data["Cycle Count"]);
+          setSocketData(data);
         }
-        return updatedData;
-      });
-      setVoltageUsageChartDataArray((prevData) => {
-        const updatedData = [...prevData, { time: data['time'], L1_GND: data.Voltage?.["L1-GND"], L2_GND: data.Voltage?.["L2-GND"], L3_GND: data.Voltage?.["L3-GND"], cycle: data['Cycle Count'] }];
-        if (updatedData.length > 20) {
-          updatedData.shift();
-        }
-        return updatedData;
-      });
-      setPressureChartDataArray((prevData) => {
-        const updatedData = [...prevData, { time: data['time'], pressure: data.Pressure, cycle: data['Cycle Count'] }];
-        if (updatedData.length > 20) {
-          updatedData.shift();
-        }
-        return updatedData;
-      })
-      setForceChartDataArray((prevData) => {
-        const updatedData = [...prevData, { time: data['time'], force: data.Force, cycle: data['Cycle Count'] }];
-        if (updatedData.length > 20) {
-          updatedData.shift();
-        }
-        return updatedData;
-      })
-      setPositionOfThePunchChartDataArray((prevData) => {
-        const updatedData = [...prevData, { time: data['time'], position: data['Position of the Punch'], cycle: data['Cycle Count'] }];
-        if (updatedData.length > 20) {
-          updatedData.shift();
-        }
-        return updatedData;
-      })
+      };
 
-      socketData = null;
-    }, delay);
+      ws.onclose = (event) => {
+        console.log("WebSocket Disconnected", event);
+      };
+    }
 
     return () => {
-      ws.close();
+      if (ws) {
+        ws.close();
+        console.log("WebSocket Disconnected");
+      }
     };
-  }, []);
+  }, [allState]); // re-run when allState changes
+
+  useEffect(() => {
+    if (!socketData) return;
+
+    const interval = setInterval(() => {
+      if (overAllDataArray.length < 200) {
+        setOverAllDataArray((prevData) => [
+          ...prevData,
+          {
+            time: socketData["time"],
+            energyConsumptionPower: socketData["Energy Consumption"]?.["Power"],
+            energyConsumption: socketData._energyConsumption,
+            pressure: socketData.Pressure,
+            force: socketData.Force,
+            positionOfThePunch: socketData["Position of the Punch"],
+            cycle: socketData["Cycle Count"]
+          }
+        ]);
+      } else {
+        setOverAllDataArray([]);
+        timeInterval = 0.2;
+      }
+
+      setEnergyConsumptionDataArray((prevData) => {
+        const updatedData = [...prevData, { time: socketData["time"], power: socketData["Energy Consumption"]?.["Power"], cycle: socketData["Cycle Count"] }];
+        if (updatedData.length > 20) updatedData.shift();
+        return updatedData;
+      });
+
+      setVoltageUsageChartDataArray((prevData) => {
+        const updatedData = [...prevData, { time: socketData["time"], L1_GND: socketData.Voltage?.["L1-GND"], L2_GND: socketData.Voltage?.["L2-GND"], L3_GND: socketData.Voltage?.["L3-GND"], cycle: socketData["Cycle Count"] }];
+        if (updatedData.length > 20) updatedData.shift();
+        return updatedData;
+      });
+
+      setPressureChartDataArray((prevData) => {
+        const updatedData = [...prevData, { time: socketData["time"], pressure: socketData.Pressure, cycle: socketData["Cycle Count"] }];
+        if (updatedData.length > 20) updatedData.shift();
+        return updatedData;
+      });
+
+      setForceChartDataArray((prevData) => {
+        const updatedData = [...prevData, { time: socketData["time"], force: socketData.Force, cycle: socketData["Cycle Count"] }];
+        if (updatedData.length > 20) updatedData.shift();
+        return updatedData;
+      });
+
+      setPositionOfThePunchChartDataArray((prevData) => {
+        const updatedData = [...prevData, { time: socketData["time"], position: socketData["Position of the Punch"], cycle: socketData["Cycle Count"] }];
+        if (updatedData.length > 20) updatedData.shift();
+        return updatedData;
+      });
+
+      setSocketData(null);
+    }, delay);
+
+    return () => clearInterval(interval);
+  }, [socketData, delay]);
+
   return (
     <div className="flex-1 overflow-auto relative z-10">
-      <Header title="ORIOTE" />
+      <Header title="OVERVIEW PAGE" />
       <main className=" max-w-7xl mx-auto py-6 px-4 lg:px-8">
-        {WSError ?
+        {!true ?
           <div className="p-4 rounded-md bg-slate-700 text-red-500">
             <h1>Error connecting. Please try again.</h1>
           </div>
@@ -141,10 +175,14 @@ export default function Home() {
             >
               <StatCard name="Machine ID" icon={MonitorCog} value={"M001EF"} color="#F59E0B" />
               <StatCard name="Machine Cycle" icon={Recycle} value={lifeCycle} color="#6366F1" />
+              <button onClick={() => setAllState(!allState)} className={`flex flex-row justify-center items-center gap-2 w-[100px] h-[50px] ${allState ? "bg-red-500" : "bg-green-500"} bg-opacity-50 backdrop-blur-md overflow-hidden shadow-lg rounded-xl border border-gray-700`}>{allState ? <span>Pause</span> : <span>Start</span>} {allState ? <Pause /> : <Play />}</button>
             </motion.div>
 
             {/* Charts */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="lg:col-span-2">
+                <OverAllChart chartData={overAllDataArray} title="Overall" />
+              </div>
               <EnergyConsumption chartData={energyConsumptionDataArray} />
               <VoltageUsageChart chartData={voltageUsageChartDataArray} />
               <PressureChart chartData={pressureChartDataArray} />
