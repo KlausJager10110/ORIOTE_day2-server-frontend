@@ -1,100 +1,131 @@
-import React, { useState, useRef, useEffect } from 'react'
-import WaveSurfer from 'wavesurfer.js'
-import RegionsPlugin from 'wavesurfer.js/dist/plugins/regions.esm.js'
+import { red } from '@mui/material/colors';
+import React, { useState, useRef, useEffect } from 'react';
+import WaveSurfer from 'wavesurfer.js';
+import RegionsPlugin from 'wavesurfer.js/dist/plugins/regions.esm.js';
 
 type Props = {
     file?: any;
-}
+};
 
 const WaveformPlayer = ({ file }: Props) => {
-    const [zoomLevel, setZoomLevel] = useState<number>(100)
-    const [isPlaying, setIsPlaying] = useState<boolean>(false)
-    const [audioReady, setAudioReady] = useState<boolean>(false)  // Track audio ready state
+    const [zoomLevel, setZoomLevel] = useState<number>(100);
+    const [isPlaying, setIsPlaying] = useState<boolean>(false);
+    const [audioReady, setAudioReady] = useState<boolean>(false); // Track audio ready state
+    const [startTime, setStartTime] = useState(0);
+    const [endTime, setEndTime] = useState(0.5);
 
-    const waveformRef = useRef<HTMLDivElement>(null)
-    const wavesurferRef = useRef<WaveSurfer | null>(null)
+    const waveformRef = useRef<any>(null);
+    const wavesurferRef = useRef<WaveSurfer | null>(null);
 
     // Initialize WaveSurfer
-    const initializeWaveSurfer = () => {
-        if (waveformRef.current && !wavesurferRef.current) {
-            const regions = RegionsPlugin.create()
+    const initializeWaveSurfer = (fileN: any) => {
+        if (fileN || (waveformRef.current && !wavesurferRef.current)) {
+            console.log('initializeWaveSurfer tricker');
+
+            const regions = RegionsPlugin.create();
 
             const wavesurfer = WaveSurfer.create({
                 container: waveformRef.current,
                 waveColor: 'rgb(255, 255, 255)',
                 progressColor: 'rgb(100, 100, 100)',
-                url: file ? window.URL.createObjectURL(file) : "./.wav/RunningAudio.wav",
-                minPxPerSec: zoomLevel, // Set initial zoom level
+                url: fileN && 'blob:' + fileN,
+                minPxPerSec: zoomLevel,
                 dragToSeek: true,
-            })
+                plugins: [regions],
+            });
 
+            if (fileN instanceof Blob) {
+                wavesurfer.loadBlob(fileN);
+            } else if (typeof fileN === 'string') {
+                wavesurfer.load(fileN);
+            }
 
-
-            wavesurferRef.current = wavesurfer
-
+            wavesurferRef.current = wavesurfer;
 
             wavesurfer.on('ready', () => {
-                setAudioReady(true)  // Set audio ready to true once the audio is loaded
-                wavesurfer.zoom(zoomLevel)  // Apply the initial zoom once the audio is ready
-            })
-        }
-    }
+                setAudioReady(true);
+                wavesurfer.zoom(zoomLevel);
+            });
 
-    // Call the initialization function immediately
+            wavesurfer.on('decode', () => {
+                regions.addRegion({
+                    start: startTime,
+                    end: endTime,
+                    content: 'normal',
+                    color: 'rgba(0, 255, 0, 0.5)',
+                    drag: false,
+                    resize: false,
+                });
+                regions.addRegion({
+                    start: 0.9,
+                    end: 0.8,
+                    content: 'awdwd',
+                    color: 'rgba(0, 255, 0, 0.5)',
+                    drag: false,
+                    resize: true,
+                });
+            });
+
+            // Add event listener to reset the play button after playback ends
+            wavesurfer.on('finish', () => {
+                setIsPlaying(false); // Reset the play/pause button state
+            });
+        }
+    };
+
     useEffect(() => {
         if (file || !wavesurferRef.current) {
-            console.log(file, "ffff");
-
-            initializeWaveSurfer()
+            console.log(file, 'ffff');
+            initializeWaveSurfer(file);
         }
         return () => {
             if (wavesurferRef.current) {
                 wavesurferRef.current.destroy();
             }
         };
-    }, [file])
+    }, [file]);
 
     // Handle play/pause toggle
     const handlePlayPause = () => {
         setIsPlaying((prev) => {
-            const newState = !prev
+            const newState = !prev;
             if (wavesurferRef.current) {
-                if (newState) wavesurferRef.current.play()
-                else wavesurferRef.current.pause()
+                if (newState) {
+                    wavesurferRef.current.play();
+                } else {
+                    wavesurferRef.current.pause();
+                }
             }
-            return newState
-        })
-    }
+            return newState;
+        });
+    };
 
     // Handle zoom control
     const handleZoomChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const newZoomLevel = Number(e.target.value)
-        setZoomLevel(newZoomLevel)
+        const newZoomLevel = Number(e.target.value);
+        setZoomLevel(newZoomLevel);
         if (audioReady && wavesurferRef.current) {
-            wavesurferRef.current.zoom(newZoomLevel)
+            wavesurferRef.current.zoom(newZoomLevel);
         }
-    }
-
-    // Forward and backward skip handlers
-    const handleSkip = (seconds: number) => {
-        if (wavesurferRef.current) {
-            wavesurferRef.current.skip(seconds)
-        }
-    }
+    };
 
     return (
-        <div className='bg-gray-800 bg-opacity-50 backdrop-blur-md shadow-lg rounded-xl p-6 border border-gray-700'>
+        <div className="bg-gray-800 bg-opacity-50 backdrop-blur-md shadow-lg rounded-xl p-6 border border-gray-700">
             <div className="bg-gray-800 bg-opacity-50 backdrop-blur-md shadow-lg rounded-xl p-6 border border-gray-700">
-                <div
-                    ref={waveformRef}
-                    style={{
-                        width: '100%',
-                        height: '100%',
-                        overflowY: 'hidden',
-                        scrollbarWidth: 'thin',
-                        scrollbarColor: '#888 #ccc',
-                    }}
-                ></div>
+                {file ? (
+                    <div
+                        ref={waveformRef}
+                        style={{
+                            width: '100%',
+                            height: '100%',
+                            overflowY: 'hidden',
+                            scrollbarWidth: 'thin',
+                            scrollbarColor: '#888 #ccc',
+                        }}
+                    ></div>
+                ) : (
+                    'Please select a file'
+                )}
             </div>
 
             {/* Zoom control */}
@@ -109,34 +140,18 @@ const WaveformPlayer = ({ file }: Props) => {
                         onChange={handleZoomChange}
                     />
                 </label>
-                {/* Play/Pause, Forward/Backward buttons */}
-                <div
-                    className='flex flex-row gap-3 justify-center items-center'
-                >
+                {/* Play/Pause button */}
+                <div className="flex flex-row gap-3 justify-center items-center">
                     <button className="p-[3px] relative" onClick={handlePlayPause}>
                         <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg" />
-                        <div className="px-8 py-2  bg-gray-600 rounded-[6px]  relative group transition duration-200 text-white hover:bg-transparent">
+                        <div className="px-8 py-2 bg-gray-600 rounded-[6px] relative group transition duration-200 text-white hover:bg-transparent">
                             {isPlaying ? 'Pause' : 'Play'}
-                        </div>
-                    </button>
-                    <button className="p-[3px] relative" onClick={() => handleSkip(5)}>
-                        <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg" />
-                        <div className="px-4 py-2  bg-gray-600 rounded-[6px]  relative group transition duration-200 text-white hover:bg-transparent">
-                            Forward 5s
-                        </div>
-                    </button>
-                    <button className="p-[3px] relative" onClick={() => handleSkip(-5)}>
-                        <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg" />
-                        <div className="px-4 py-2  bg-gray-600 rounded-[6px]  relative group transition duration-200 text-white hover:bg-transparent">
-                            Backward 5s
                         </div>
                     </button>
                 </div>
             </div>
-
-
         </div>
-    )
-}
+    );
+};
 
-export default WaveformPlayer
+export default WaveformPlayer;

@@ -10,6 +10,7 @@ import AudioGraph from '@/components/page-components/audioGraph';
 import { DataTable } from '../history/page';
 import { GridColDef } from '@mui/x-data-grid';
 import { Modal, Typography, Box } from '@mui/material';
+import LoadAudio from '@/components/page-components/loadAudio';
 
 
 type Props = {}
@@ -67,15 +68,87 @@ function AudioPredictionPage({ }: Props) {
         }
     }
 
-    const getAudioPredictionFile = async (fileName: string) => {
-        const file = fileName;
+    // const getAudioPredictionFile = async (fileName: string) => {
+    //     const file = fileName;
 
-        const downloadAudio = (audioUrl: string) => {
-            const link = document.createElement('a');
-            link.href = audioUrl;
-            link.download = fileName;
-            link.click();
+    //     const downloadAudio = (audioUrl: string) => {
+    //         const link = document.createElement('a');
+    //         link.href = audioUrl;
+    //         link.download = fileName;
+    //         link.click();
+    //     };
+
+    //     try {
+    //         const resGetAudioFile = await axios.get(
+    //             'https://3e2c-49-237-36-69.ngrok-free.app/audio/' + file,
+    //             {
+    //                 responseType: 'blob',
+    //                 headers: {
+    //                     "ngrok-skip-browser-warning": "69420",
+    //                     "Content-Type": "audio/wav",
+    //                 },
+    //             }
+    //         );
+
+    //         if (resGetAudioFile.status === 200 && resGetAudioFile.data) {
+    //             const audioBlob = new Blob([resGetAudioFile.data], { type: 'audio/wav' });
+    //             const audioUrl = URL.createObjectURL(audioBlob);
+    //             // downloadAudio(audioUrl);
+    //             const audio = new Audio(audioUrl);
+    //             // // audio.load();
+    //             // // audio.play();
+    //             // console.log(resGetAudioFile.data, "dadwda")
+    //             console.log("res", resGetAudioFile.data);
+    //             console.log("url", audioUrl);
+    //             console.log("2blob", audioBlob);
+    //             console.log('2audio', audio);
+
+
+    //             // console.log("Audio file loaded and playing", resGetAudioFile.data);
+
+    //             setAudioFileUrl(resGetAudioFile.data);
+    //             setModalOpen(false);
+    //         }
+
+    //         setError("");
+    //     } catch (error) {
+    //         console.error("Error fetching the audio file", error);
+    //         setError(error || "Failed to load the audio file");
+    //     }
+    // }
+
+    const saveToIndexedDB = (fileName: any, fileData: any) => {
+        const request = indexedDB.open('audioDatabase2', 1);
+        request.onupgradeneeded = (event: any) => {
+            const db = event.target.result;
+            // สร้าง object store สำหรับเก็บไฟล์ audio
+            if (!db.objectStoreNames.contains('audioFiles')) {
+                db.createObjectStore('audioFiles', { keyPath: 'fileName' });
+            }
         };
+
+        request.onsuccess = (event: any) => {
+            const db = event.target.result;
+            const transaction = db.transaction('audioFiles', 'readwrite');
+            const store = transaction.objectStore('audioFiles');
+            store.put({ fileName, fileData }); // เก็บไฟล์ใน IndexedDB
+
+            transaction.oncomplete = () => {
+                console.log('File saved to IndexedDB successfully!');
+            };
+
+            transaction.onerror = (error: any) => {
+                console.error('Error saving file to IndexedDB', error);
+            };
+        };
+
+        request.onerror = (error) => {
+            console.error('Error opening IndexedDB', error);
+        };
+    };
+
+    const getAudioPredictionFile = async (fileName: any) => {
+        const file = fileName;
 
         try {
             const resGetAudioFile = await axios.get(
@@ -84,26 +157,28 @@ function AudioPredictionPage({ }: Props) {
                     responseType: 'blob',
                     headers: {
                         "ngrok-skip-browser-warning": "69420",
-                        "Content-Type": "application/json"
+                        "Content-Type": "audio/wav",
                     },
                 }
             );
 
             if (resGetAudioFile.status === 200 && resGetAudioFile.data) {
                 const audioBlob = new Blob([resGetAudioFile.data], { type: 'audio/wav' });
+
+                // เก็บไฟล์ใน IndexedDB
+                saveToIndexedDB(fileName, audioBlob);
+
+                // สร้าง URL สำหรับเล่นไฟล์
                 const audioUrl = URL.createObjectURL(audioBlob);
-                downloadAudio(audioUrl);
                 const audio = new Audio(audioUrl);
-                // audio.load();
-                // audio.play();
-                console.log(resGetAudioFile.data, "dadwda")
-                console.log(audioUrl);
-                console.log(audio);
-                
 
-                // console.log("Audio file loaded and playing", resGetAudioFile.data);
+                // console.log(resGetAudioFile.data, "dadwda")
+                console.log("res", resGetAudioFile.data);
+                console.log("url", audioUrl);
+                console.log("blob", audioBlob);
+                console.log('audio', audio);
 
-                setAudioFileUrl(audioUrl);
+                // setAudioFileUrl(audioUrl); // หรือเก็บ URL สำหรับใช้งาน
                 setModalOpen(false);
             }
 
@@ -112,7 +187,7 @@ function AudioPredictionPage({ }: Props) {
             console.error("Error fetching the audio file", error);
             setError(error || "Failed to load the audio file");
         }
-    }
+    };
 
 
     const handleSelectionModelChange = (selection: any) => {
@@ -124,6 +199,52 @@ function AudioPredictionPage({ }: Props) {
             setModalOpen(true);
         } else {
             setSelectedRowData(null);
+        }
+    };
+
+
+    const loadFromIndexedDB = (fileName: any) => {
+        return new Promise((resolve, reject) => {
+            const request = indexedDB.open('audioDatabase2', 1);
+
+            request.onsuccess = (event: any) => {
+                const db = event.target.result;
+                const transaction = db.transaction('audioFiles', 'readonly');
+                const store = transaction.objectStore('audioFiles');
+                const getRequest = store.get(fileName);
+
+                getRequest.onsuccess = () => {
+                    if (getRequest.result) {
+                        const fileData = getRequest.result.fileData;
+                        const audioUrl = URL.createObjectURL(fileData); // สร้าง URL จาก blob
+                        resolve(audioUrl); // ส่ง URL กลับไปใช้ในการเล่นไฟล์
+                    } else {
+                        reject("File not found in IndexedDB");
+                    }
+                };
+
+                getRequest.onerror = () => {
+                    reject("Error retrieving file from IndexedDB");
+                };
+            };
+
+            request.onerror = () => {
+                reject("Error opening IndexedDB");
+            };
+        });
+    };
+    const playAudioFromIndexedDB = async (fileName: any) => {
+        try {
+            getAudioPredictionFile(fileName).then(async () => {
+                const audioUrl: any = await loadFromIndexedDB(fileName);
+                const audio = new Audio(audioUrl);
+                console.log("playAudioFromIndexedDB :", audioUrl);
+                
+                setAudioFileUrl(audioUrl);
+            })
+            // audio.play();
+        } catch (error) {
+            console.error(error);
         }
     };
 
@@ -158,7 +279,7 @@ function AudioPredictionPage({ }: Props) {
                         </Typography>
                         <div className="flex justify-end space-x-4">
                             <button
-                                onClick={() => getAudioPredictionFile(selectedRowData.filename)}
+                                onClick={() => playAudioFromIndexedDB(selectedRowData.filename)}
                                 className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                             >
                                 Yes
