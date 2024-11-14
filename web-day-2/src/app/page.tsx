@@ -11,6 +11,8 @@ import ForceChart from "@/components/page-components/forceChart";
 import PositionPunchChart from "@/components/page-components/positionPunchChart";
 import PressureChart from "@/components/page-components/pressureChart";
 import OverAllChart from "@/components/page-components/overAllChart";
+import TESTCHART from "@/components/page-components/testChart";
+import Example from "@/components/page-components/testChart";
 
 export default function Home() {
   const delay = 0;
@@ -108,11 +110,11 @@ export default function Home() {
           ...prevData,
           {
             time: socketData["time"],
-            energyConsumptionPower: socketData["Energy Consumption"]?.["Power"],
             energyConsumption: socketData._energyConsumption,
             pressure: socketData.Pressure,
             force: socketData.Force,
             positionOfThePunch: socketData["Position of the Punch"],
+            energyConsumptionPower: socketData["Energy Consumption"]?.["Power"],
             cycle: socketData["Cycle Count"]
           }
         ]);
@@ -167,21 +169,19 @@ export default function Home() {
           </div>
           :
           <>
-            <motion.div
+            <div
               className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1 }}
             >
               <StatCard name="Machine ID" icon={MonitorCog} value={"M001EF"} color="#F59E0B" />
               <StatCard name="Machine Cycle" icon={Recycle} value={lifeCycle} color="#6366F1" />
               <button onClick={() => setAllState(!allState)} className={`flex flex-row justify-center items-center gap-2 w-[100px] h-[50px] ${allState ? "bg-red-500" : "bg-green-500"} bg-opacity-50 backdrop-blur-md overflow-hidden shadow-lg rounded-xl border border-gray-700`}>{allState ? <span>Pause</span> : <span>Start</span>} {allState ? <Pause /> : <Play />}</button>
-            </motion.div>
+            </div>
 
             {/* Charts */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <div className="lg:col-span-2">
                 <OverAllChart chartData={overAllDataArray} title="Overall" />
+                {/* <Example /> */}
               </div>
               <EnergyConsumption chartData={energyConsumptionDataArray} />
               <VoltageUsageChart chartData={voltageUsageChartDataArray} />

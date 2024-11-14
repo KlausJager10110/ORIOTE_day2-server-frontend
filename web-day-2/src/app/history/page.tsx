@@ -43,17 +43,11 @@ function HistoryPage() {
     const [lifeCycle, setLifeCycle] = useState(0)
     const [overAllDataArray, setOverAllDataArray] = useState<any[]>([])
 
-
-    // const currentDate = new Date();
-    // const currentDateBangkok = new Date(currentDate.toLocaleString("en-US", { timeZone: "Asia/Bangkok" }));
-    // const startDateTime = new Date(currentDateBangkok.getTime() - (60 * 60 * 1000)).toISOString();
-    // const endDateTime = currentDateBangkok.toISOString();
-
-
     const [startDate, setStartDate] = useState<string>("");
     const [startTime, setStartTime] = useState<string>("");
     const [endDate, setEndDate] = useState<string>("");
     const [endTime, setEndTime] = useState<string>("");
+
 
     const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const selectedStartDate = new Date(e.target.value);
@@ -93,18 +87,23 @@ function HistoryPage() {
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-
-        // const startDateTime = getFormattedDateTime(startDate, startTime);
-        // const endDateTime = getFormattedDateTime(endDate, endTime);
-
         const startDateTime = getFormattedDateTime(startDate, startTime)
         const endDateTime = getFormattedDateTime(endDate, endTime);
         console.log(startDateTime, endDateTime);
-        // console.log(startDate, endDate, startTime, endTime);
 
         postHistoryDataFromREST_API(startDateTime, endDateTime)
     }
 
+
+    function formatISOToCustomDate(isoDate: string) {
+        const date = new Date(isoDate);
+        const day = String(date.getUTCDate()).padStart(2, '0');
+        const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+        const year = date.getUTCFullYear();
+        const hours = String(date.getUTCHours()).padStart(2, '0');
+        const minutes = String(date.getUTCMinutes()).padStart(2, '0');
+        return `${day}/${month}/${year} ${hours}:${minutes}`;
+    }
 
     const postHistoryDataFromREST_API = async (start_DT?: string, end_DT?: string) => {
         console.log(start_DT, end_DT);
@@ -125,7 +124,7 @@ function HistoryPage() {
                                 id: item._id,
                                 energyConsumptionPower: item.energyConsumption?.power,
                                 energyConsumption: item.energyConsumption?.power * 1000 * (0.2 * (index + 1)) / 3600,
-                                time: item.timestamp,
+                                time: formatISOToCustomDate(item.timestamp),
                                 pressure: item.pressure,
                                 force: item.force,
                                 positionOfThePunch: item.positionOfThePunch,
@@ -140,6 +139,27 @@ function HistoryPage() {
             setError(error)
         }
     }
+
+    const maxDataLength = overAllDataArray.length;
+    const pageSize = 200; // จำนวนข้อมูลที่ต้องการแสดงต่อหน้า
+    const [currentPage, setCurrentPage] = useState(0);
+
+    // คำนวณค่า startPoint และ endPoint จาก currentPage และ pageSize
+    const startPoint = currentPage * pageSize;
+    const endPoint = Math.min(startPoint + pageSize, maxDataLength);
+
+    const handleNext = () => {
+        if (startPoint + pageSize < maxDataLength) {
+            setCurrentPage((prevPage) => prevPage + 1);
+        }
+    };
+
+    const handlePrevious = () => {
+        if (currentPage > 0) {
+            setCurrentPage((prevPage) => prevPage - 1);
+        }
+    };
+
     return (
         <div className="flex-1 overflow-auto relative z-10">
             <Header title="HISTORY PAGE" />
@@ -150,11 +170,8 @@ function HistoryPage() {
                     </div>
                     :
                     <>
-                        <motion.div
+                        <div
                             className="grid grid-cols-1 gap-5 mb-8"
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 1 }}
                         >
                             <form onSubmit={handleSubmit} className='flex flex-col gap-3 items-center'>
                                 <div className="flex flex-row gap-2 justify-center items-center lg:col-span-2">
@@ -209,14 +226,31 @@ function HistoryPage() {
                                 </div>
                                 <button type="submit" className="flex flex-row justify-center items-center gap-2 w-[100px] h-[50px] bg-gray-500 bg-opacity-50 backdrop-blur-md overflow-hidden shadow-lg rounded-md border border-gray-700">OK</button>
                             </form>
-                        </motion.div>
+                        </div>
 
                         {/* Charts */}
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                             <div className="lg:col-span-2">
                                 {true ? ( //overAllDataArray.length > 0
                                     <>
-                                        <OverAllChart chartData={overAllDataArray.slice(0, 200)} title="History Overview" slice={true} />
+                                        <div className="flex justify-center mt-4">
+                                            <button
+                                                onClick={handlePrevious}
+                                                disabled={currentPage === 0}
+                                                className="px-4 py-2 mx-2 bg-gray-500 rounded-md disabled:opacity-50"
+                                            >
+                                                ซ้าย
+                                            </button>
+
+                                            <button
+                                                onClick={handleNext}
+                                                disabled={endPoint >= maxDataLength}
+                                                className="px-4 py-2 mx-2 bg-gray-500 rounded-md disabled:opacity-50"
+                                            >
+                                                ขวา
+                                            </button>
+                                        </div>
+                                        <OverAllChart chartData={overAllDataArray.slice(startPoint, endPoint)} title="History Overview" />
                                     </>
                                 ) : (
                                     <div className="lg:col-span-2 bg-gray-800 bg-opacity-50 backdrop-blur-md shadow-lg rounded-xl p-4 border border-gray-700"><ChevronLast className=' inline-block' /> No data found. Please choose a date and time.</div>
@@ -238,15 +272,15 @@ export default HistoryPage
 
 
 
-export function DataTable({ rows, columns, paginationModel }: any) {
+export function DataTable({ rows, columns, paginationModel, onSelectionModelChange }: { rows: any, columns: any, paginationModel: any, onSelectionModelChange?: (selection: any) => void }) {
     return (
-        <Paper sx={{ height: 400, width: '100%' }} className="p-2 ">
+        <Paper sx={{ height: 400, width: '100%' }} className="p-2">
             <DataGrid
                 rows={rows}
                 columns={columns}
                 initialState={{ pagination: { paginationModel } }}
                 pageSizeOptions={[5, 10]}
-                // checkboxSelection
+                onRowSelectionModelChange={onSelectionModelChange}
                 sx={{ border: 0 }}
             />
         </Paper>

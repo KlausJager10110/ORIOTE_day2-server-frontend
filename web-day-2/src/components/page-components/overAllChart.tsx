@@ -11,15 +11,16 @@ import {
     Legend,
     Area,
     ComposedChart,
+    LineChart,
 } from 'recharts';
 
 type DataType = {
     time: number;
-    energyConsumptionPower: number;
     energyConsumption: number;
     pressure: number;
     force: number;
     positionOfThePunch: number;
+    energyConsumptionPower: number;
     cycle: number;
 };
 
@@ -29,9 +30,12 @@ type Props = {
     slice?: boolean;
     Increase?: () => void;
     Decrease?: () => void;
+    endPoint?: any;
+    startPoint?: number;
 };
 
-const OverAllChart = ({ chartData, title = "title", slice = false, Increase, Decrease }: Props) => {
+const OverAllChart = ({ chartData, title = "title", slice = false, Increase, Decrease, endPoint, startPoint }: Props) => {
+    const maxDataLength = chartData.length;
 
     const getAxisYDomain = (
         from: number,
@@ -46,7 +50,7 @@ const OverAllChart = ({ chartData, title = "title", slice = false, Increase, Dec
             if (d[ref] < bottom) bottom = d[ref];
         });
         return [(bottom | 0) - offset, (top | 0) + offset];
-    };
+    }
 
 
     // const [data, setData] = useState<DataType[]>(initialData);
@@ -76,10 +80,10 @@ const OverAllChart = ({ chartData, title = "title", slice = false, Increase, Dec
         let rightVal = refAreaRight;
         if (leftVal > rightVal) [leftVal, rightVal] = [rightVal, leftVal];
 
-        const [bottom, top] = getAxisYDomain(leftVal, rightVal, 'energyConsumption', 50);
+        const [bottom, top] = getAxisYDomain(leftVal, rightVal, 'energyConsumption', 1);
         const [bottom2, top2] = getAxisYDomain(leftVal, rightVal, 'pressure', 50);
-        const [bottom3, top3] = getAxisYDomain(leftVal, rightVal, 'positionOfThePunch', 50);
-        const [bottom4, top4] = getAxisYDomain(leftVal, rightVal, 'force', 50);
+        const [bottom3, top3] = getAxisYDomain(leftVal, rightVal, 'positionOfThePunch', 100);
+        const [bottom4, top4] = getAxisYDomain(leftVal, rightVal, 'force', 150);
 
         setLeft(leftVal);
         setRight(rightVal);
@@ -126,9 +130,9 @@ const OverAllChart = ({ chartData, title = "title", slice = false, Increase, Dec
                 <h2 className="text-lg font-extrabold mb-4 text-gray-100">{title}</h2>
                 {slice &&
                     <div className="flex flex-row justify-center items-center gap-2">
-                        <ChevronLeft className=" cursor-pointer" onClick={Decrease} />
+                        <button onClick={Decrease} disabled={startPoint === 0}><ChevronLeft className="cursor-pointer" /></button>
                         <div className=" font-bold">{100}</div>
-                        <ChevronRight className=" cursor-pointer" onClick={Increase} />
+                        <button onClick={Increase} disabled={endPoint >= maxDataLength}><ChevronRight className=" cursor-pointer" /></button>
                     </div>
                 }
             </div>
@@ -185,7 +189,7 @@ const OverAllChart = ({ chartData, title = "title", slice = false, Increase, Dec
                 </div>
 
                 <ResponsiveContainer width="100%" height={450}>
-                    <ComposedChart
+                    <LineChart
                         data={Object.values(graphSelected).every(value => value === false) ? [] : chartData}
                         onMouseDown={(e) => setRefAreaLeft(e?.activeLabel)}
                         onMouseMove={(e) => refAreaLeft && setRefAreaRight(e?.activeLabel)}
@@ -253,7 +257,7 @@ const OverAllChart = ({ chartData, title = "title", slice = false, Increase, Dec
                             }}
                             itemStyle={{ color: "#E5E7EB" }}
                         />
-                        {graphSelected.energyConsumption && <Area yAxisId="1" type="monotone" name="Energy Consumption" dataKey="energyConsumption" stroke="#8884d8" animationDuration={300} />}
+                        {graphSelected.energyConsumption && <Line yAxisId="1" type="monotone" name="Energy Consumption" dataKey="energyConsumption" stroke="#8884d8" animationDuration={300} />}
                         {graphSelected.pressure && <Line dot={false} yAxisId="2" type="monotone" name="Pressure" dataKey="pressure" stroke="#82ca9d" animationDuration={300} />}
                         {graphSelected.positionOfPunch && <Line dot={false} yAxisId="3" type="monotone" name="Position of the punch" dataKey="positionOfThePunch" stroke="#829d" animationDuration={300} />}
                         {graphSelected.force && <Line dot={false} yAxisId="4" name="Force" type="monotone" dataKey="force" stroke="#2aad" animationDuration={300} />}
@@ -271,7 +275,7 @@ const OverAllChart = ({ chartData, title = "title", slice = false, Increase, Dec
                         ) : null}
                         <Legend />
 
-                    </ComposedChart>
+                    </LineChart>
                 </ResponsiveContainer>
 
             </div>
