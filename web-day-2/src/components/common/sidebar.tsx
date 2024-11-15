@@ -14,17 +14,17 @@ const SIDEBAR_ITEMS = [
         color: "#6366f1",
         href: "/",
     },
-    { name: "Rasbery Pi Control", icon: ShoppingBag, color: "#8B5CF6", href: "/products" },
+    { name: "Rasbery Pi Control", icon: ShoppingBag, color: "#8B5CF6", href: "/raspiconfig" },
     { name: "History", icon: FileClock, color: "#EC4899", href: "/history" },
     { name: "Audio Prediction", icon: ChartLine, color: "#10B981", href: "/audioprediction" },
-    { name: "Orders", icon: ShoppingCart, color: "#F59E0B", href: "/orders" },
-    { name: "Analytics", icon: TrendingUp, color: "#3B82F6", href: "/analytics" },
-    { name: "Settings", icon: Settings, color: "#6EE7B7", href: "/settings" },
+    // { name: "Orders", icon: ShoppingCart, color: "#F59E0B", href: "/orders" },
+    // { name: "Analytics", icon: TrendingUp, color: "#3B82F6", href: "/analytics" },
+    // { name: "Settings", icon: Settings, color: "#6EE7B7", href: "/settings" },
 ]
 
 
 function Sidebar() {
-    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     return (
         <motion.div
             className={`relative z-10 transition-all duration-300 ease-in-out flex-shrink-0 ${isSidebarOpen ? 'w-64' : 'w-20'}`}

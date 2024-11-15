@@ -1,38 +1,37 @@
 'use client'
 
-import StatCard from '@/components/common/statCard'
 import OverAllChart from '@/components/page-components/overAllChart'
 import React, { useEffect, useState } from 'react'
-import { motion } from 'framer-motion'
 import Header from '@/components/common/header'
-import { ChevronLast, Recycle } from 'lucide-react'
+import { ChevronLast, ChevronLeft, ChevronRight } from 'lucide-react'
 import axios from 'axios';
 import { DataGrid, GridColDef } from '@mui/x-data-grid';
 import Paper from '@mui/material/Paper';
+import { Box, Modal, Typography } from '@mui/material'
 
 
 
 const columns: GridColDef[] = [
-    { field: 'id', headerName: 'ID', width: 70 },
-    { field: 'time', headerName: 'Timestamp', width: 130 },
-    { field: 'force', headerName: 'Force', width: 130 },
+    { field: 'id', headerName: 'ID', flex: 1 },
+    { field: 'time', headerName: 'Timestamp', flex: 1 },
+    { field: 'force', headerName: 'Force', flex: 1 },
     {
         field: 'pressure',
         headerName: 'Pressure',
         type: 'number',
-        width: 100,
+        flex: 1
     },
     {
         field: 'energyConsumption',
         headerName: 'Energy Consumption',
         type: 'number',
-        width: 200,
+        flex: 1
     },
     {
         field: 'positionOfThePunch',
         headerName: 'Position of the Punch',
         type: 'number',
-        width: 200,
+        flex: 1
     },
 ];
 
@@ -48,6 +47,9 @@ function HistoryPage() {
     const [endDate, setEndDate] = useState<string>("");
     const [endTime, setEndTime] = useState<string>("");
 
+    const [modalOpen, setModalOpen] = useState(false)
+    const [getDataRangeSuccess, setGetDataRangeSuccess] = useState("")
+    const [getDataRangeError, setGetDataRangeError] = useState("")
 
     const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const selectedStartDate = new Date(e.target.value);
@@ -121,7 +123,7 @@ function HistoryPage() {
                         const updatedData = [
                             ...prevData,
                             ...res.data.map((item: any, index: number) => ({
-                                id: item._id,
+                                id: index + 1,
                                 energyConsumptionPower: item.energyConsumption?.power,
                                 energyConsumption: item.energyConsumption?.power * 1000 * (0.2 * (index + 1)) / 3600,
                                 time: formatISOToCustomDate(item.timestamp),
@@ -133,10 +135,18 @@ function HistoryPage() {
                         ];
                         return updatedData;
                     });
+                    setGetDataRangeSuccess("")
+                    setGetDataRangeError("")
+                } else if (!res.data) {
+                    setGetDataRangeError("Not found Data or invalid Date time Range. Please try again.")
+                    setModalOpen(true);
                 }
             }
         } catch (error) {
             setError(error)
+            setGetDataRangeSuccess("")
+            setGetDataRangeError("error: " + error)
+            setModalOpen(true);
         }
     }
 
@@ -160,10 +170,44 @@ function HistoryPage() {
         }
     };
 
+
+
     return (
         <div className="flex-1 overflow-auto relative z-10">
             <Header title="HISTORY PAGE" />
             <main className=" max-w-7xl mx-auto py-6 px-4 lg:px-8">
+                <Modal
+                    open={modalOpen}
+                    onClose={() => setModalOpen(false)}
+                    aria-labelledby="modal-modal-title"
+                    aria-describedby="modal-modal-description"
+                >
+                    <Box
+                        sx={{
+                            position: 'absolute',
+                            top: '50%',
+                            left: '50%',
+                            transform: 'translate(-50%, -50%)',
+                            width: 400,
+                            bgcolor: '#334155',
+                            borderRadius: '15px',
+                            boxShadow: 24,
+                            p: 4,
+                        }}
+                    >
+                        <Typography id="modal-title" component="h2" className="text-xl font-extrabold text-white mb-4">
+                            {getDataRangeSuccess ? getDataRangeSuccess : getDataRangeError ? getDataRangeError : ""}
+                        </Typography>
+                        <div className="flex justify-end space-x-4 mt-12">
+                            <button
+                                onClick={() => setModalOpen(false)}
+                                className="px-4 py-2 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                            >
+                                OK
+                            </button>
+                        </div>
+                    </Box>
+                </Modal>
                 {!true ?
                     <div className="p-4 rounded-md bg-slate-700 text-red-500">
                         <h1>Error connecting. Please try again.</h1>
@@ -233,21 +277,21 @@ function HistoryPage() {
                             <div className="lg:col-span-2">
                                 {true ? ( //overAllDataArray.length > 0
                                     <>
-                                        <div className="flex justify-center mt-4">
+                                        <div className="flex justify-end mt-4 mb-2">
                                             <button
                                                 onClick={handlePrevious}
                                                 disabled={currentPage === 0}
-                                                className="px-4 py-2 mx-2 bg-gray-500 rounded-md disabled:opacity-50"
+                                                className="px-2 py-2 mx-2 bg-gray-500 rounded-md disabled:opacity-50"
                                             >
-                                                ซ้าย
+                                                <ChevronLeft />
                                             </button>
 
                                             <button
                                                 onClick={handleNext}
                                                 disabled={endPoint >= maxDataLength}
-                                                className="px-4 py-2 mx-2 bg-gray-500 rounded-md disabled:opacity-50"
+                                                className="px-2 py-2 mx-2 bg-gray-500 rounded-md disabled:opacity-50"
                                             >
-                                                ขวา
+                                                <ChevronRight />
                                             </button>
                                         </div>
                                         <OverAllChart chartData={overAllDataArray.slice(startPoint, endPoint)} title="History Overview" />

@@ -5,14 +5,16 @@ import RegionsPlugin from 'wavesurfer.js/dist/plugins/regions.esm.js';
 
 type Props = {
     file?: any;
+    data?: any;
 };
 
-const WaveformPlayer = ({ file }: Props) => {
+const WaveformPlayer = ({ file, data }: Props) => {
     const [zoomLevel, setZoomLevel] = useState<number>(100);
     const [isPlaying, setIsPlaying] = useState<boolean>(false);
     const [audioReady, setAudioReady] = useState<boolean>(false); // Track audio ready state
-    const [startTime, setStartTime] = useState(0);
-    const [endTime, setEndTime] = useState(0.5);
+    // const [startTime, setStartTime] = useState<number>(0);
+    // const [endTime, setEndTime] = useState<number>(0.5);
+    const [dataFile, setDataFile] = useState<any>({})
 
     const waveformRef = useRef<any>(null);
     const wavesurferRef = useRef<WaveSurfer | null>(null);
@@ -21,16 +23,16 @@ const WaveformPlayer = ({ file }: Props) => {
     const initializeWaveSurfer = (fileN: any) => {
         if (fileN || (waveformRef.current && !wavesurferRef.current)) {
             console.log('initializeWaveSurfer tricker');
-
             const regions = RegionsPlugin.create();
-
             const wavesurfer = WaveSurfer.create({
                 container: waveformRef.current,
                 waveColor: 'rgb(255, 255, 255)',
                 progressColor: 'rgb(100, 100, 100)',
-                url: fileN && 'blob:' + fileN,
+                url: fileN && fileN,
                 minPxPerSec: zoomLevel,
                 dragToSeek: true,
+                mediaControls: true,
+                hideScrollbar: false,
                 plugins: [regions],
             });
 
@@ -46,26 +48,24 @@ const WaveformPlayer = ({ file }: Props) => {
                 setAudioReady(true);
                 wavesurfer.zoom(zoomLevel);
             });
-
             wavesurfer.on('decode', () => {
                 regions.addRegion({
-                    start: startTime,
-                    end: endTime,
-                    content: 'normal',
-                    color: 'rgba(0, 255, 0, 0.5)',
+                    start: dataFile.metadata?.duration?.start,
+                    end: dataFile.metadata?.duration?.stop || null,
+                    content: dataFile.metadata?.tags[0],
+                    color: dataFile.metadata?.tags[0] === 'normal' ? 'rgba(0, 255, 0, 0.3)' : 'rgba(255, 0, 0, 0.3)',
                     drag: false,
                     resize: false,
                 });
-                regions.addRegion({
-                    start: 0.9,
-                    end: 0.8,
-                    content: 'awdwd',
-                    color: 'rgba(0, 255, 0, 0.5)',
-                    drag: false,
-                    resize: true,
-                });
+                // regions.addRegion({
+                //     start: 0.9,
+                //     end: 0.8,
+                //     content: 'awdwd',
+                //     color: 'rgba(0, 255, 0, 0.5)',
+                //     drag: false,
+                //     resize: true,
+                // });
             });
-
             // Add event listener to reset the play button after playback ends
             wavesurfer.on('finish', () => {
                 setIsPlaying(false); // Reset the play/pause button state
@@ -83,7 +83,8 @@ const WaveformPlayer = ({ file }: Props) => {
                 wavesurferRef.current.destroy();
             }
         };
-    }, [file]);
+        setDataFile(data)
+    }, [file, data]);
 
     // Handle play/pause toggle
     const handlePlayPause = () => {
@@ -119,8 +120,6 @@ const WaveformPlayer = ({ file }: Props) => {
                             width: '100%',
                             height: '100%',
                             overflowY: 'hidden',
-                            scrollbarWidth: 'thin',
-                            scrollbarColor: '#888 #ccc',
                         }}
                     ></div>
                 ) : (

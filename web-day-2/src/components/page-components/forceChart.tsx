@@ -3,16 +3,12 @@ import { motion } from 'framer-motion'
 import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 type Props = {
-    // chartData: DataPoint[];
     chartData: any[];
 };
 function ForceChart({ chartData }: Props) {
     return (
         <div
             className="bg-gray-800 bg-opacity-50 backdrop-blur-md shadow-lg rounded-xl p-6 border border-gray-700"
-        // initial={{ opacity: 0, y: 20 }}
-        // animate={{ opacity: 1, y: 0 }}
-        // transition={{ delay: 0.3 }}
         >
             <h2 className="text-lg font-extrabold mb-4 text-gray-100">Force</h2>
             <div className="h-80">

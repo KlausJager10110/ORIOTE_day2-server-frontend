@@ -9,13 +9,11 @@ import {
     ReferenceArea,
     ResponsiveContainer,
     Legend,
-    Area,
-    ComposedChart,
     LineChart,
 } from 'recharts';
 
 type DataType = {
-    time: number;
+    time: any;
     energyConsumption: number;
     pressure: number;
     force: number;
@@ -34,8 +32,104 @@ type Props = {
     startPoint?: number;
 };
 
+const refChartData = [
+    {
+        cycle: 8936,
+        energyConsumption: 62.45631734322057,
+        energyConsumptionPower: 104.09386223870094,
+        force: 0.122459197300464,
+        positionOfThePunch: 144.4679421260184,
+        pressure: -0.47394092781622754,
+        time: "15/11/2024, 06:33:43"
+    },
+    {
+        cycle: 8937,
+        energyConsumption: 88.59714508528998,
+        energyConsumptionPower: 110.74643135661246,
+        force: 30.25125046659326,
+        positionOfThePunch: 108.83815913866316,
+        pressure: 20.06370544968503,
+        time: "15/11/2024, 06:33:43"
+    },
+    {
+        cycle: 8938,
+        energyConsumption: 92.6680112059892,
+        energyConsumptionPower: 92.6680112059892,
+        force: 0.14435273651387134,
+        positionOfThePunch: 72.17945313273606,
+        pressure: -0.216125676771587,
+        time: "15/11/2024, 06:33:43"
+    },
+    {
+        cycle: 8939,
+        energyConsumption: 122.14115450613743,
+        energyConsumptionPower: 101.7842954217812,
+        force: -0.21288906982947947,
+        positionOfThePunch: 35.909783438701524,
+        pressure: 0.10405262269744946,
+        time: "15/11/2024, 06:33:43"
+    },
+    {
+        cycle: 8941,
+        energyConsumption: 134.06110248271582,
+        energyConsumptionPower: 95.75793034479702,
+        force: 30.499367824613596,
+        positionOfThePunch: -0.5071506356441793,
+        pressure: 20.87257294002275,
+        time: "15/11/2024, 06:33:44"
+    },
+    {
+        cycle: 8942,
+        energyConsumption: 153.5111346209191,
+        energyConsumptionPower: 95.94445913807445,
+        force: -0.6634484403169423,
+        positionOfThePunch: 34.77816919708457,
+        pressure: 0.3221612352415891,
+        time: "15/11/2024, 06:33:44"
+    },
+    {
+        cycle: 8943,
+        energyConsumption: 183.1649504154355,
+        energyConsumptionPower: 101.75830578635306,
+        force: 30.53472820781529,
+        positionOfThePunch: 72.42302413406964,
+        pressure: 20.924172856873742,
+        time: "15/11/2024, 06:33:44"
+    },
+    {
+        cycle: 8944,
+        energyConsumption: 199.54093748733203,
+        energyConsumptionPower: 99.77046874366603,
+        force: 0.15709520641857436,
+        positionOfThePunch: 108.15297230056132,
+        pressure: 0.24598343475596735,
+        time: "15/11/2024, 06:33:44"
+    },
+    {
+        cycle: 8945,
+        energyConsumption: 226.80845809621368,
+        energyConsumptionPower: 103.09475368009714,
+        force: 29.663580831260788,
+        positionOfThePunch: 144.36076211082712,
+        pressure: 20.544947833855222,
+        time: "15/11/2024, 06:33:45"
+    },
+    {
+        cycle: 8946,
+        energyConsumption: 231.40395829329896,
+        energyConsumptionPower: 96.41831595554123,
+        force: 0.05088406123517551,
+        positionOfThePunch: 180.06862325153742,
+        pressure: 0.11831299561600214,
+        time: "15/11/2024, 06:33:45"
+    },
+];
+
+
+
 const OverAllChart = ({ chartData, title = "title", slice = false, Increase, Decrease, endPoint, startPoint }: Props) => {
     const maxDataLength = chartData.length;
+    console.log(chartData)
 
     const getAxisYDomain = (
         from: number,
@@ -43,29 +137,32 @@ const OverAllChart = ({ chartData, title = "title", slice = false, Increase, Dec
         ref: keyof DataType,
         offset: number
     ): [number, number] => {
-        const refData = chartData.slice(from - 1, to);
+        const refData: any[] = refChartData.slice(from - 1, to);
+
+        if (refData.length === 0) {
+            return [10, offset];
+        }
+
         let [bottom, top] = [refData[0][ref], refData[0][ref]];
         refData.forEach((d) => {
             if (d[ref] > top) top = d[ref];
             if (d[ref] < bottom) bottom = d[ref];
         });
         return [(bottom | 0) - offset, (top | 0) + offset];
-    }
+    };
 
-
-    // const [data, setData] = useState<DataType[]>(initialData);
-    const [left, setLeft] = useState<any>('dataMin');
+    const [left, setLeft] = useState<string | number>('dataMin');
     const [right, setRight] = useState<any>('dataMax');
     const [refAreaLeft, setRefAreaLeft] = useState<any>('');
     const [refAreaRight, setRefAreaRight] = useState<any>('');
-    const [top, setTop] = useState<any>('dataMax+1');
-    const [bottom, setBottom] = useState<any>('dataMin');
-    const [top2, setTop2] = useState<any>('dataMax+100');
-    const [bottom2, setBottom2] = useState<any>('dataMin');
-    const [top3, setTop3] = useState<any>('dataMax+100');
-    const [bottom3, setBottom3] = useState<any>('dataMin');
-    const [top4, setTop4] = useState<any>('dataMax+100');
-    const [bottom4, setBottom4] = useState<any>('dataMin');
+    const [top, setTop] = useState<string | number>('dataMax+1');
+    const [bottom, setBottom] = useState<string | number>('dataMin');
+    const [top2, setTop2] = useState<string | number>('dataMax+100');
+    const [bottom2, setBottom2] = useState<string | number>('dataMin');
+    const [top3, setTop3] = useState<string | number>('dataMax+100');
+    const [bottom3, setBottom3] = useState<string | number>('dataMin');
+    const [top4, setTop4] = useState<string | number>('dataMax+100');
+    const [bottom4, setBottom4] = useState<string | number>('dataMin');
 
 
 
@@ -191,8 +288,8 @@ const OverAllChart = ({ chartData, title = "title", slice = false, Increase, Dec
                 <ResponsiveContainer width="100%" height={450}>
                     <LineChart
                         data={Object.values(graphSelected).every(value => value === false) ? [] : chartData}
-                        onMouseDown={(e) => setRefAreaLeft(e?.activeLabel)}
-                        onMouseMove={(e) => refAreaLeft && setRefAreaRight(e?.activeLabel)}
+                        onMouseDown={(e) => setRefAreaLeft(e.activeLabel)}
+                        onMouseMove={(e) => refAreaLeft && setRefAreaRight(e.activeLabel)}
                         onMouseUp={zoom}
                     >
                         <CartesianGrid strokeDasharray="3 3" />
@@ -257,7 +354,7 @@ const OverAllChart = ({ chartData, title = "title", slice = false, Increase, Dec
                             }}
                             itemStyle={{ color: "#E5E7EB" }}
                         />
-                        {graphSelected.energyConsumption && <Line yAxisId="1" type="monotone" name="Energy Consumption" dataKey="energyConsumption" stroke="#8884d8" animationDuration={300} />}
+                        {graphSelected.energyConsumption && <Line dot={false} yAxisId="1" type="monotone" name="Energy Consumption" dataKey="energyConsumption" stroke="#8884d8" animationDuration={300} />}
                         {graphSelected.pressure && <Line dot={false} yAxisId="2" type="monotone" name="Pressure" dataKey="pressure" stroke="#82ca9d" animationDuration={300} />}
                         {graphSelected.positionOfPunch && <Line dot={false} yAxisId="3" type="monotone" name="Position of the punch" dataKey="positionOfThePunch" stroke="#829d" animationDuration={300} />}
                         {graphSelected.force && <Line dot={false} yAxisId="4" name="Force" type="monotone" dataKey="force" stroke="#2aad" animationDuration={300} />}
