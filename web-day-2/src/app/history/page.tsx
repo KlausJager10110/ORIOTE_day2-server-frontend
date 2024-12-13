@@ -8,6 +8,7 @@ import axios from 'axios';
 import { DataGrid, GridColDef } from '@mui/x-data-grid';
 import Paper from '@mui/material/Paper';
 import { Box, Modal, Typography } from '@mui/material'
+import { HEADER } from '@/constants/constant'
 
 
 
@@ -114,6 +115,9 @@ function HistoryPage() {
                 {
                     start: start_DT,
                     end: end_DT
+                },
+                {
+                    headers: HEADER.headers
                 }
             )
             if (res.status === 200) {

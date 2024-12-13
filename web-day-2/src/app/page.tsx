@@ -48,7 +48,8 @@ export default function Home() {
     let ws: WebSocket | null = null;
 
     if (allState) {
-      ws = new WebSocket("ws://technest.ddns.net:8001/ws");
+      // ws = new WebSocket("ws://technest.ddns.net:8001/ws");
+      ws = new WebSocket("ws://localhost:8080"); //
       const api_key = "f1b17e2b414bc422a4b8e78ad6fb65bc";
 
       ws.onopen = () => {

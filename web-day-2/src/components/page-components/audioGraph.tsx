@@ -12,8 +12,8 @@ const WaveformPlayer = ({ file, data }: Props) => {
     const [zoomLevel, setZoomLevel] = useState<number>(100);
     const [isPlaying, setIsPlaying] = useState<boolean>(false);
     const [audioReady, setAudioReady] = useState<boolean>(false); // Track audio ready state
-    // const [startTime, setStartTime] = useState<number>(0);
-    // const [endTime, setEndTime] = useState<number>(0.5);
+    const [startTime, setStartTime] = useState<number>(0);
+    const [endTime, setEndTime] = useState<number>(0.5);
     const [dataFile, setDataFile] = useState<any>({})
 
     const waveformRef = useRef<any>(null);
@@ -129,7 +129,7 @@ const WaveformPlayer = ({ file, data }: Props) => {
 
             {/* Zoom control */}
             <div className="mt-4 flex flex-row justify-between items-center bg-gray-800 bg-opacity-50 backdrop-blur-md shadow-lg rounded-xl p-6 border border-gray-700">
-                <label className="flex flex-row gap-3">
+                <label className="flex flex-row gap-3 hidden">
                     <span>Zoom:</span>
                     <input
                         type="range"

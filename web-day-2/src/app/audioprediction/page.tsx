@@ -49,7 +49,7 @@ function AudioPredictionPage({ }: Props) {
 
     const getAudioPredictionFileList = async () => {
         try {
-            const resAudioList = await axios.get('https://3e2c-49-237-36-69.ngrok-free.app/list/audio', { headers: HEADER.headers })
+            const resAudioList = await axios.get('https://382b-49-237-10-89.ngrok-free.app/list/audio', { headers: HEADER.headers })
             console.log(resAudioList.data)
             if (resAudioList.status === 200 && resAudioList.status) {
                 setAudioListDataArray((prevData) => {
